@@ -1,0 +1,31 @@
+:root {
+  --glass-cinema-backdrop: #0b0d10;
+  --glass-cinema-surface: rgba(13, 17, 23, 0.7);
+  --glass-cinema-elevated: rgba(16, 22, 29, 0.85);
+  --glass-cinema-border: rgba(77, 182, 255, 0.18);
+  --glass-cinema-highlight: rgba(243, 186, 22, 0.35);
+  --glass-cinema-primary: #4db6ff;
+  --glass-cinema-secondary: #ff5da2;
+  --glass-cinema-accent: #f3ba16;
+  --glass-cinema-text-primary: #e6e8ea;
+  --glass-cinema-text-muted: #aab1b7;
+  --glass-cinema-success: #22c55e;
+  --glass-cinema-danger: #ef4444;
+  --glass-cinema-warning: #facc15;
+  --glass-cinema-gradient-primary: linear-gradient(
+    135deg,
+    rgba(77, 182, 255, 0.85) 0%,
+    rgba(255, 93, 162, 0.65) 100%
+  );
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --glass-cinema-backdrop: #f6f8fb;
+    --glass-cinema-surface: rgba(255, 255, 255, 0.7);
+    --glass-cinema-elevated: rgba(255, 255, 255, 0.92);
+    --glass-cinema-text-primary: #111827;
+    --glass-cinema-text-muted: #4b5563;
+    --glass-cinema-border: rgba(77, 182, 255, 0.25);
+  }
+}
