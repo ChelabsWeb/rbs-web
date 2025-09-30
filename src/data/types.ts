@@ -1,3 +1,5 @@
+﻿export type MovieStatus = "in_theaters" | "upcoming" | "catalog";
+
 export interface Movie {
   id: string;
   title: string;
@@ -5,10 +7,15 @@ export interface Movie {
   synopsis?: string;
   releaseDate?: string;
   posterUrl?: string;
+  bannerUrl?: string;
+  trailerUrl?: string;
+  videoUrls?: string[];
   studio?: string;
-  status?: string;
+  status?: MovieStatus;
   genre?: string;
   runtimeMinutes?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Studio {

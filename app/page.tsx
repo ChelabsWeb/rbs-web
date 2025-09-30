@@ -1,35 +1,65 @@
+﻿import Image from "next/image";
 import Link from "next/link";
-import Image from "next/image";
+
 import { Container } from "@/components/AppShell/Container";
-import { SectionTitle } from "@/components/SectionTitle";
 import { PosterCard } from "@/components/PosterCard";
+import { SectionTitle } from "@/components/SectionTitle";
+import { getMovies } from "@/server/movies";
+import type { Movie } from "@/data/types";
 
-const HERO_STATS = [
-  { label: "Pel�culas activas", value: "45" },
-  { label: "Cines asociados", value: "20" },
-  { label: "Estrenos 2025", value: "35" },
-  { label: "A�os de trayectoria", value: "25" },
-];
+export const dynamic = "force-dynamic";
 
-const FEATURED_PLACEHOLDER = Array.from({ length: 5 }, (_, index) => ({
-  title: `Estreno destacado ${index + 1}`,
-  releaseDate: "Fecha por confirmar",
-  studio: index % 2 === 0 ? "Disney" : "Universal",
-}));
+function formatReleaseDate(value?: string): string | undefined {
+  if (!value) {
+    return undefined;
+  }
 
-const IN_THEATERS_PLACEHOLDER = Array.from({ length: 6 }, (_, index) => ({
-  title: `En cartelera ${index + 1}`,
-  releaseDate: "Ahora en salas",
-  studio: index % 3 === 0 ? "Paramount" : "RBS",
-}));
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
 
-const UPCOMING_PLACEHOLDER = Array.from({ length: 6 }, (_, index) => ({
-  title: `Pr�ximo estreno ${index + 1}`,
-  releaseDate: "Muy pronto",
-  studio: index % 2 === 0 ? "Disney" : "Universal",
-}));
+  return new Intl.DateTimeFormat("es-UY", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
 
-export default function HomePage() {
+function mapPoster(movie: Movie) {
+  return {
+    title: movie.title,
+    releaseDate: formatReleaseDate(movie.releaseDate),
+    studio: movie.studio,
+    posterUrl: movie.posterUrl,
+    href: `/peliculas/${movie.slug}`,
+  };
+}
+
+function pickFeatured(movies: Movie[]): Movie[] {
+  const inTheaters = movies.filter((movie) => movie.status === "in_theaters");
+  const upcoming = movies.filter((movie) => movie.status === "upcoming");
+
+  if (inTheaters.length >= 5) {
+    return inTheaters.slice(0, 5);
+  }
+
+  return [...inTheaters, ...upcoming].slice(0, 5);
+}
+
+export default async function HomePage() {
+  const movies = await getMovies();
+  const inTheaters = movies.filter((movie) => movie.status === "in_theaters");
+  const upcoming = movies.filter((movie) => movie.status === "upcoming");
+  const catalog = movies.filter((movie) => movie.status === "catalog");
+  const featured = pickFeatured(movies);
+
+  const heroStats = [
+    { label: "Peliculas activas", value: inTheaters.length.toString().padStart(2, "0") },
+    { label: "Proximos estrenos", value: upcoming.length.toString().padStart(2, "0") },
+    { label: "Catalogo total", value: movies.length.toString().padStart(2, "0") },
+  ];
+
   return (
     <main className="flex flex-col gap-20 pb-20">
       <section className="relative isolate overflow-hidden">
@@ -44,9 +74,8 @@ export default function HomePage() {
                 El cine que mueve a Uruguay.
               </h1>
               <p className="max-w-xl text-base text-glass-cinema-text-muted sm:text-lg">
-                Representamos a los grandes estudios internacionales y conectamos sus estrenos con
-                el p�blico local. Explor� el line up, descarg� materiales oficiales y planific� tus
-                pr�ximos lanzamientos.
+                Representamos a los grandes estudios internacionales y conectamos sus estrenos con el publico local.
+                Explora la cartelera, descarga materiales oficiales y planifica tus lanzamientos.
               </p>
             </div>
             <div className="flex flex-wrap gap-4">
@@ -64,17 +93,13 @@ export default function HomePage() {
               </Link>
             </div>
             <dl className="grid gap-4 sm:grid-cols-2">
-              {HERO_STATS.map((stat) => (
+              {heroStats.map((stat) => (
                 <div
                   key={stat.label}
                   className="rounded-3xl border border-glass-cinema-outline bg-glass-cinema-surface p-6 shadow-glass"
                 >
-                  <dt className="text-xs uppercase tracking-[0.35em] text-glass-cinema-text-muted">
-                    {stat.label}
-                  </dt>
-                  <dd className="mt-3 font-display text-3xl font-semibold text-glass-cinema-text">
-                    {stat.value}
-                  </dd>
+                  <dt className="text-xs uppercase tracking-[0.35em] text-glass-cinema-text-muted">{stat.label}</dt>
+                  <dd className="mt-3 font-display text-3xl font-semibold text-glass-cinema-text">{stat.value}</dd>
                 </div>
               ))}
             </dl>
@@ -89,11 +114,9 @@ export default function HomePage() {
             />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-glass-cinema-backdrop via-transparent to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-6">
-              <p className="text-xs uppercase tracking-[0.35em] text-glass-cinema-text-muted">
-                Pr�ximamente
-              </p>
+              <p className="text-xs uppercase tracking-[0.35em] text-glass-cinema-text-muted">Actualizado cada semana</p>
               <p className="mt-2 font-display text-2xl text-glass-cinema-text">
-                Marat�n de estrenos internacionales 2025
+                Acceso directo al material oficial de tus estrenos
               </p>
             </div>
           </div>
@@ -103,28 +126,34 @@ export default function HomePage() {
       <section className="space-y-10">
         <Container>
           <SectionTitle
-            eyebrow="Featured"
+            eyebrow="Destacados"
             title="Estrenos destacados"
-            description="Avance de los t�tulos que liderar�n la taquilla en los pr�ximos meses."
+            description="Una seleccion curada de los titulos con mayor prioridad comercial en las proximas semanas."
             action={
               <Link
                 href="/cine"
                 className="text-sm font-semibold text-glass-cinema-primary transition hover:text-glass-cinema-secondary"
               >
-                Ver agenda completa ?
+                Ver agenda completa ->
               </Link>
             }
           />
         </Container>
-        <div className="no-scrollbar overflow-x-auto px-6 sm:px-12 lg:px-24">
-          <div className="flex min-w-max gap-6">
-            {FEATURED_PLACEHOLDER.map((movie) => (
-              <div key={movie.title} className="w-[220px] shrink-0">
-                <PosterCard {...movie} />
-              </div>
-            ))}
+        {featured.length > 0 ? (
+          <div className="no-scrollbar overflow-x-auto px-6 sm:px-12 lg:px-24">
+            <div className="flex min-w-max gap-6">
+              {featured.map((movie) => (
+                <div key={movie.id} className="w-[220px] shrink-0">
+                  <PosterCard {...mapPoster(movie)} />
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <p className="px-6 text-sm text-glass-cinema-text-muted sm:px-12 lg:px-24">
+            Todavia no hay estrenos destacados cargados. Agrega peliculas desde el panel de administracion.
+          </p>
+        )}
       </section>
 
       <section className="space-y-10">
@@ -132,38 +161,67 @@ export default function HomePage() {
           <SectionTitle
             eyebrow="Ahora"
             title="En cartelera"
-            description="Pel�culas activas en circuitos nacionales con materiales actualizados."
+            description="Peliculas activas en circuitos nacionales con materiales actualizados."
           />
         </Container>
-        <div className="no-scrollbar overflow-x-auto px-6 sm:px-12 lg:px-24">
-          <div className="flex min-w-max gap-6">
-            {IN_THEATERS_PLACEHOLDER.map((movie) => (
-              <div key={movie.title} className="w-[220px] shrink-0">
-                <PosterCard {...movie} />
-              </div>
-            ))}
+        {inTheaters.length > 0 ? (
+          <div className="no-scrollbar overflow-x-auto px-6 sm:px-12 lg:px-24">
+            <div className="flex min-w-max gap-6">
+              {inTheaters.slice(0, 10).map((movie) => (
+                <div key={movie.id} className="w-[220px] shrink-0">
+                  <PosterCard {...mapPoster(movie)} />
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <p className="px-6 text-sm text-glass-cinema-text-muted sm:px-12 lg:px-24">
+            Carga peliculas con estado "En cartelera" para mostrarlas en esta seccion.
+          </p>
+        )}
       </section>
 
       <section className="space-y-10">
         <Container>
           <SectionTitle
-            eyebrow="Planificaci�n"
-            title="Pr�ximos estrenos"
+            eyebrow="Planificacion"
+            title="Proximos estrenos"
             description="Calendario preliminar para cines, partners y licenciatarios."
           />
         </Container>
-        <div className="no-scrollbar overflow-x-auto px-6 sm:px-12 lg:px-24">
-          <div className="flex min-w-max gap-6">
-            {UPCOMING_PLACEHOLDER.map((movie) => (
-              <div key={movie.title} className="w-[220px] shrink-0">
-                <PosterCard {...movie} />
-              </div>
-            ))}
+        {upcoming.length > 0 ? (
+          <div className="no-scrollbar overflow-x-auto px-6 sm:px-12 lg:px-24">
+            <div className="flex min-w-max gap-6">
+              {upcoming.slice(0, 10).map((movie) => (
+                <div key={movie.id} className="w-[220px] shrink-0">
+                  <PosterCard {...mapPoster(movie)} />
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <p className="px-6 text-sm text-glass-cinema-text-muted sm:px-12 lg:px-24">
+            Marca peliculas como "Proximamente" para que aparezcan aqui.
+          </p>
+        )}
       </section>
+
+      {catalog.length > 0 ? (
+        <section className="space-y-10">
+          <Container>
+            <SectionTitle
+              eyebrow="Catalogo"
+              title="Biblioteca permanente"
+              description="Historico de titulos disponibles para programaciones especiales y ciclos tematicos."
+            />
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {catalog.slice(0, 6).map((movie) => (
+                <PosterCard key={movie.id} {...mapPoster(movie)} />
+              ))}
+            </div>
+          </Container>
+        </section>
+      ) : null}
     </main>
   );
 }

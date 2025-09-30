@@ -1,11 +1,15 @@
-import { PosterCard } from "./PosterCard";
+﻿import { PosterCard } from "./PosterCard";
+
+interface MovieGridItem {
+  title: string;
+  releaseDate?: string;
+  studio?: string;
+  posterUrl?: string;
+  href?: string;
+}
 
 interface MovieGridProps {
-  items?: Array<{
-    title: string;
-    releaseDate?: string;
-    studio?: string;
-  }>;
+  items?: MovieGridItem[];
 }
 
 export function MovieGrid({ items }: MovieGridProps) {

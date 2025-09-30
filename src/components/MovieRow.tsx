@@ -1,13 +1,17 @@
-import { PosterCard } from "./PosterCard";
+﻿import { PosterCard } from "./PosterCard";
+
+interface MovieRowItem {
+  title: string;
+  releaseDate?: string;
+  studio?: string;
+  posterUrl?: string;
+  href?: string;
+}
 
 interface MovieRowProps {
   title: string;
   description?: string;
-  items?: Array<{
-    title: string;
-    releaseDate?: string;
-    studio?: string;
-  }>;
+  items?: MovieRowItem[];
 }
 
 export function MovieRow({ title, description, items }: MovieRowProps) {
