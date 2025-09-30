@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import { wordpressConfig } from "@/config";
 import type { Movie, Studio } from "./types";
 import { mapWordpressMovie, mapWordpressStudio } from "./mappers";
@@ -32,17 +33,37 @@ interface WordpressStudioRaw {
   [key: string]: unknown;
 }
 
+function resolveAuthHeader(): string | undefined {
+  if (wordpressConfig.authToken) {
+    return wordpressConfig.authToken.startsWith("Basic ") ||
+      wordpressConfig.authToken.startsWith("Bearer ")
+      ? wordpressConfig.authToken
+      : `Bearer ${wordpressConfig.authToken}`;
+  }
+
+  if (wordpressConfig.user && wordpressConfig.password) {
+    const base64 = Buffer.from(`${wordpressConfig.user}:${wordpressConfig.password}`).toString(
+      "base64",
+    );
+    return `Basic ${base64}`;
+  }
+
+  return undefined;
+}
+
 async function fetchJson<T>(endpoint: string, init?: RequestInit): Promise<T> {
   if (!wordpressConfig.baseUrl) {
     throw new Error("WORDPRESS_API_BASE_URL is not configured");
   }
 
   const url = new URL(endpoint, wordpressConfig.baseUrl);
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-    ...(wordpressConfig.authToken ? { Authorization: `Bearer ${wordpressConfig.authToken}` } : {}),
-    ...(init?.headers ?? {}),
-  };
+  const headers = new Headers(init?.headers ?? {});
+  headers.set("Content-Type", "application/json");
+
+  const authHeader = resolveAuthHeader();
+  if (authHeader) {
+    headers.set("Authorization", authHeader);
+  }
 
   const response = await fetch(url, {
     ...init,

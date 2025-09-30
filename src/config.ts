@@ -10,4 +10,6 @@ export const siteConfig = {
 export const wordpressConfig = {
   baseUrl: process.env.WORDPRESS_API_BASE_URL ?? "",
   authToken: process.env.WORDPRESS_AUTH_TOKEN ?? "",
+  user: process.env.WORDPRESS_API_USER ?? "",
+  password: process.env.WORDPRESS_API_PASSWORD ?? "",
 };
