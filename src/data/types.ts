@@ -6,6 +6,9 @@ export interface Movie {
   releaseDate?: string;
   posterUrl?: string;
   studio?: string;
+  status?: string;
+  genre?: string;
+  runtimeMinutes?: number;
 }
 
 export interface Studio {
